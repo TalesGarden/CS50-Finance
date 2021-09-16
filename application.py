@@ -72,7 +72,6 @@ def login():
 
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
-
         # Ensure username was submitted
         if not request.form.get("username"):
             return apology("must provide username", 403)
@@ -119,9 +118,39 @@ def quote():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    """Register user"""
-    return apology("TODO")
 
+    if request.method == "POST":
+         # Ensure username was submitted
+        if not request.form.get("username"):
+            return apology("must provide username", 403)
+
+        # Ensure password was submitted
+        elif not request.form.get("password"):
+            return apology("must provide password", 403)
+
+        elif not request.form.get("confirmationPassword"):
+            return apology("must Confirm the password", 403)
+
+        elif request.form.get("confirmationPassword") != request.form.get("password"):
+            return apology("The password must be the same", 403)
+
+        name = request.form.get("username")
+        password = request.form.get("password")
+        passwordHash = generate_password_hash(password)
+
+        # Query database for username
+        rows = db.execute("SELECT * FROM users WHERE username = ?", name)
+
+        # Ensure username exists and password is correct
+        if len(rows) == 1:
+            return apology("The user alredy exist", 403)
+
+            """Register user"""
+        rows = db.execute("INSERT INTO users VALUES(?, ?)", name, passwordHash)
+
+
+    else:
+        return render_template("register.html")
 
 @app.route("/sell", methods=["GET", "POST"])
 @login_required
