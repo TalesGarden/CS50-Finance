@@ -1,5 +1,5 @@
 import os
-
+import uuid 
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session
 from flask_session import Session
@@ -136,6 +136,7 @@ def register():
 
         name = request.form.get("username")
         password = request.form.get("password")
+        #hash the password to insert in users
         passwordHash = generate_password_hash(password)
 
         # Query database for username
@@ -145,8 +146,17 @@ def register():
         if len(rows) == 1:
             return apology("The user alredy exist", 403)
 
-            """Register user"""
-        rows = db.execute("INSERT INTO users VALUES(?, ?)", name, passwordHash)
+        # Fiding the next ID
+
+        NumberId = db.execute("SELECT * FROM users")
+
+        NumberId = len(NumberId) + 1
+        
+
+         # Inserting users into table users
+        rows = db.execute("INSERT INTO users VALUES(?, ?, ?, ?)", NumberId, name, passwordHash, 10000)
+
+        return redirect("/login")
 
 
     else:
