@@ -111,6 +111,26 @@ def logout():
 
 @app.route("/quote", methods=["GET", "POST"])
 @login_required
+def quote():
+    """Get stock quote."""
+    if request.method == "GET":
+        return render_template("quote.html")
+
+
+    if request.method == "POST":
+        symbol = request.form.get("symbol")
+        responseAPI = lookup(symbol)
+        if not responseAPI:
+            return apology("Symbol does not exist")
+
+    name = responseAPI["name"]
+    price = usd(float(responseAPI["price"]))
+    symbol = responseAPI["symbol"]
+
+    #price = usd(price)
+    
+    return render_template("quote.html", symbol = symbol, price = price, name = name  )
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -152,11 +172,11 @@ def register():
 
         return redirect("/login")
 
-
     else:
         return render_template("register.html")
 
 @app.route("/sell", methods=["GET", "POST"])
+
 @login_required
 def sell():
     """Sell shares of stock"""
@@ -173,3 +193,4 @@ def errorhandler(e):
 # Listen for errors
 for code in default_exceptions:
     app.errorhandler(code)(errorhandler)
+
