@@ -1,5 +1,4 @@
 import os
-import uuid 
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session
 from flask_session import Session
@@ -14,7 +13,6 @@ app = Flask(__name__)
 
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
-
 
 # Ensure responses aren't cached
 @app.after_request
@@ -126,8 +124,6 @@ def quote():
     name = responseAPI["name"]
     price = usd(float(responseAPI["price"]))
     symbol = responseAPI["symbol"]
-
-    #price = usd(price)
     
     return render_template("quote.html", symbol = symbol, price = price, name = name  )
 
