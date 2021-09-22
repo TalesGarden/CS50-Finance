@@ -62,7 +62,7 @@ def buy():
     if request.method == "GET":
         return render_template("buy.html")
 
-    #buying shares    
+    #buying shares, method POST     
     else:
         symbol = request.form.get("symbol")
         shares = request.form.get("shares")
@@ -90,6 +90,7 @@ def buy():
         #saving the transaction in database
         data = datetime.datetime.now()
         rows = db.execute("INSERT INTO stockUsers(symbol, name, shares, price, total, type, data, id_user) VALUES(?, ?, ?, ?, ?, ?, ?, ? )",symbol,name,shares,price,total,"BUY", data, idUser )
+             
         return apology("iNSERIU NA TABELA",0)
 
 
@@ -198,12 +199,12 @@ def register():
             return apology("The user alredy exist", 403)
         
         # Fiding the next ID
-        NumberId = db.execute("SELECT * FROM users")
-        NumberId = len(NumberId) + 1
+       # NumberId = db.execute("SELECT * FROM users")
+       # NumberId = len(NumberId) + 1
         
 
          # Inserting users into table users
-        rows = db.execute("INSERT INTO users VALUES(?, ?, ?, ?)", NumberId, name, passwordHash, 10000)
+        rows = db.execute("INSERT INTO users(username, hash, cash) VALUES(?, ?, ?)", name, passwordHash, 10000)
 
         return redirect("/login")
 
