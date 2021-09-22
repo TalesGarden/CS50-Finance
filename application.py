@@ -5,7 +5,7 @@ from flask_session import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
-
+import datetime
 from helpers import apology, login_required, lookup, usd
 
 # Configure application
@@ -13,6 +13,13 @@ app = Flask(__name__)
 
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
+
+#Define constants BUY and SELL keyword
+@app.before_first_request
+def before_first_request_func():
+    BUY = "BUY"
+    SELL = "SELL"
+
 
 # Ensure responses aren't cached
 @app.after_request
@@ -51,7 +58,39 @@ def index():
 @login_required
 def buy():
     """Buy shares of stock"""
-    return render_template("buy.html")
+    #opening the page to buy shares
+    if request.method == "GET":
+        return render_template("buy.html")
+
+    #buying shares    
+    else:
+        symbol = request.form.get("symbol")
+        shares = request.form.get("shares")
+        responseAPI = lookup(symbol)
+
+        if not responseAPI:
+            return apology("Symbol does not exist")
+
+        price = responseAPI["price"]
+        name = responseAPI["name"]
+        symbol = responseAPI["symbol"]
+
+        if int(shares) < 1 :
+            return apology("You can't buy negative shares")
+
+        #checking if the user has enough money
+        idUser = session["user_id"]
+        rows = db.execute("SELECT cash FROM users WHERE users.id = ?", idUser)
+        cash =  rows[0]["cash"]
+        total = int(shares) * price 
+
+        if total > cash:
+            return apology("you don't have enough money")
+
+        #saving the transaction in database
+        data = datetime.datetime.now()
+        rows = db.execute("INSERT INTO stockUsers(symbol, name, shares, price, total, type, data, id_user) VALUES(?, ?, ?, ?, ?, ?, ?, ? )",symbol,name,shares,price,total,"BUY", data, idUser )
+        return apology("iNSERIU NA TABELA",0)
 
 
 @app.route("/history")
