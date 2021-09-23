@@ -90,7 +90,14 @@ def buy():
         #saving the transaction in database
         data = datetime.datetime.now()
         rows = db.execute("INSERT INTO stockUsers(symbol, name, shares, price, total, type, data, id_user) VALUES(?, ?, ?, ?, ?, ?, ?, ? )",symbol,name,shares,price,total,"BUY", data, idUser )
-             
+
+        #updating cash of user
+        remainingMoney = cash - total
+
+        rows = db.execute("UPDATE users SET cash = ? WHERE users.id = ?",remainingMoney, idUser )
+
+        if not rows:
+            return apology("DATABASE ERROR",400)
         return apology("iNSERIU NA TABELA",0)
 
 
