@@ -198,11 +198,6 @@ def register():
         if len(rows) == 1:
             return apology("The user alredy exist", 403)
         
-        # Fiding the next ID
-       # NumberId = db.execute("SELECT * FROM users")
-       # NumberId = len(NumberId) + 1
-        
-
          # Inserting users into table users
         rows = db.execute("INSERT INTO users(username, hash, cash) VALUES(?, ?, ?)", name, passwordHash, 10000)
 
