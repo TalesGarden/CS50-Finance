@@ -51,18 +51,14 @@ if not os.environ.get("API_KEY"):
 @app.route("/")
 @login_required
 def index():
-    
-    idUser = session["user_id"]
-    rows = db.execute("SELECT symbol, name, shares, price, total FROM stockUsers INNER JOIN users ON stockUsers.id_user = ?", idUser)
-    
-    size = len(rows)
-
-    return apology("TODO",size)
-    #return render_template("index.html", register = rows, size = size)
     """Show portfolio of stocks"""
 
+    idUser = session["user_id"]
 
+    rows = db.execute("SELECT symbol, name, shares, price, stockUsers.total FROM stockUsers WHERE stockUsers.id_user = ?", idUser)
     
+    #return apology("TODO",size)
+    return render_template("index.html", register = rows)
 
 
 @app.route("/buy", methods=["GET", "POST"])

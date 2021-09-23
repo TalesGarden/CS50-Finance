@@ -23,13 +23,13 @@
             </tr>
         </tfoot>
         <tbody>
-             {% for index in range(size) %}              
+             {% for stock in register %}              
                 <tr>
-                    <td>{{ register[index]["symbol"] }}</td>
-                    <td>{{ register[index]["name"]  }}</td>
-                    <td>{{ register[index]["shares"] }}</td>
-                    <td>{{ register[index]["price"] }}</td>
-                    <td>{{ register[index]["total"] }}</td>
+                    <td>{{ stock.symbol }}</td>
+                    <td>{{ stock.name  }}</td>
+                    <td>{{ stock.shares }}</td>
+                    <td>{{ stock.price }}</td>
+                    <td>{{ stock.total }}</td>
                 </tr>
                 {% endfor %}  
             <tr>
