@@ -55,10 +55,15 @@ def index():
 
     idUser = session["user_id"]
 
-    rows = db.execute("SELECT symbol, name, shares, price, stockUsers.total FROM stockUsers WHERE stockUsers.id_user = ?", idUser)
+    rows = db.execute("SELECT symbol, name, shares, price, stockUsers.total FROM stockUsers WHERE stockUsers.id_user = ? and stockUsers.type = ?", idUser, "BUY")
     
-    #return apology("TODO",size)
-    return render_template("index.html", register = rows)
+    cashRow = db.execute("SELECT cash FROM users WHERE id = ?", idUser)
+    if not cashRow:
+        return apology("Error Database User")
+    cash = cashRow[0]["cash"]
+    cashFooter = 0
+
+    return render_template("index.html", register = rows, cash = cash)
 
 
 @app.route("/buy", methods=["GET", "POST"])
@@ -105,8 +110,8 @@ def buy():
 
         if not rows:
             return apology("DATABASE ERROR",400)
-        return apology("iNSERIU NA TABELA",0)
-
+           
+        return redirect("/")
 
 @app.route("/history")
 @login_required
