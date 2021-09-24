@@ -229,8 +229,38 @@ def register():
 @login_required
 def sell():
     """Sell shares of stock"""
-    return render_template("sell.html")
-    return apology("TODO")
+    idUser = session["user_id"]
+    if request.method == "GET":
+        
+
+        #selecting all symbol name from stocks that had been buy
+        rows =  db.execute("SELECT DISTINCT stockUsers.symbol FROM stockUsers WHERE stockUsers.id_user = ? ",idUser )
+
+        return render_template("sell.html", stocks = rows)
+    else:
+        
+        symbol = request.form.get("symbol")
+        shares = request.form.get("shares")
+
+        if shares <= 0:
+            return apology("Shares must be positive", 400)
+
+        # Need to return the number of shares of a stock symbol
+        data = db.execute("SELECT  SUM (stockUsers.shares) AS totalShares FROM stockUsers WHERE stockUsers.id_user = ? and symbol = ? AND type = ?",idUser, symbol, "BUY" )
+
+        #total shares of a given symbol
+        totalShares = 0
+        for value in data:
+            totalShares = value["totalShares"]
+
+        if shares > totalShares:
+            return apology("TOO many shares")
+        
+        responseAPI = lookup(symbol)
+        price = responseAPI["price"]
+
+
+
 
 
 def errorhandler(e):
