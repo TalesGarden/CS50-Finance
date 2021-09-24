@@ -15,12 +15,6 @@ app = Flask(__name__)
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
-#Define constants BUY and SELL keyword
-@app.before_first_request
-def before_first_request_func():
-    BUY = "BUY"
-    SELL = "SELL"
-
 
 # Ensure responses aren't cached
 @app.after_request
@@ -55,15 +49,20 @@ def index():
 
     idUser = session["user_id"]
 
-    rows = db.execute("SELECT symbol, name, shares, price, stockUsers.total FROM stockUsers WHERE stockUsers.id_user = ? and stockUsers.type = ?", idUser, "BUY")
+    rows = db.execute("SELECT symbol, name, shares, price, total FROM stockUsers WHERE stockUsers.id_user = ? and stockUsers.type = ?", idUser, "BUY")
     
     cashRow = db.execute("SELECT cash FROM users WHERE id = ?", idUser)
     if not cashRow:
         return apology("Error Database User")
-    cash = cashRow[0]["cash"]
-    cashFooter = 0
 
-    return render_template("index.html", register = rows, cash = cash)
+    cash = cashRow[0]["cash"]
+    # sum of user cash and stocks shares total price
+    cashFooter = 0 
+    for data in rows:
+      cashFooter += data["total"]
+    cashFooter += cash
+    
+    return render_template("index.html", register = rows, cash = cash, cashFooter = cashFooter)
 
 
 @app.route("/buy", methods=["GET", "POST"])
@@ -230,6 +229,7 @@ def register():
 @login_required
 def sell():
     """Sell shares of stock"""
+    return render_template("sell.html")
     return apology("TODO")
 
 
