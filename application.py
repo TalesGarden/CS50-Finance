@@ -100,7 +100,7 @@ def buy():
 
         #saving the transaction in database
         data = datetime.datetime.now()
-        rows = db.execute("INSERT INTO stockUsers(symbol, name, shares, price, total, type, data, id_user) VALUES(?, ?, ?, ?, ?, ?, ?, ? )",symbol,name,shares,price,total,"BUY", data, idUser )
+        rows = db.execute("INSERT INTO stockUsers(symbol, name, shares,history_shares, price, total, type, data, id_user) VALUES(?, ?, ?, ?, ?, ?, ? , ?, ? )",symbol, name, shares, shares, price, total, "BUY", data, idUser )
 
         #updating cash of user
         remainingMoney = cash - total
@@ -242,8 +242,8 @@ def sell():
         symbol = request.form.get("symbol")
         shares = request.form.get("shares")
 
-        if shares <= 0:
-            return apology("Shares must be positive", 400)
+        #if int(shares) <= 0:
+        #    return apology("Shares must be positive", 400)
 
         # Need to return the number of shares of a stock symbol
         data = db.execute("SELECT  SUM (stockUsers.shares) AS totalShares FROM stockUsers WHERE stockUsers.id_user = ? and symbol = ? AND type = ?",idUser, symbol, "BUY" )
@@ -253,12 +253,17 @@ def sell():
         for value in data:
             totalShares = value["totalShares"]
 
+        return apology("asdf",totalShares)
+
         if shares > totalShares:
             return apology("TOO many shares")
         
         responseAPI = lookup(symbol)
         price = responseAPI["price"]
-
+        #USAR UM SELECT QUE RETORNE TODAS COMPRAS DO SYMBOLO
+        # FAZER UM FOR DIMINUINDO O NÚMERO DE SHARES PARA VENDER
+        #AS LINHAS QUE FOREM ZERADAS NÃO SERÃO EXIBIDAS NO INDEX
+        # FICA APEAS O PROBLEMA DE MOSTRAR TODO O HISTÓRICO QUE PODE SER RESOLVIDO ADICIONANDO UM ATRIBUTO NA TABELA DE NOME INICIAL SHARES BUY
 
 
 
