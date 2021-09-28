@@ -50,13 +50,9 @@ def index():
     idUser = session["user_id"]
 
     #zero in the third parameter means to show only if exist shares to show
-    rows = db.execute("SELECT symbol, name, shares, price, total FROM stockUsers WHERE stockUsers.id_user = ? and stockUsers.type = ? and stockUsers.shares > ? ", idUser, "BUY", 0)
+    #rows = db.execute("SELECT symbol, name, shares, price, total FROM stockUsers WHERE #stockUsers.id_user = ? and stockUsers.type = ? and stockUsers.shares > ? ", idUser, #"BUY", 0)
 
-    # O NÚMERO DE AÇÕES DEVE SER AGRUPADA COM O SIMBOLO E NOME
-    # PORTANTO, TODA TRANSAÇÃO FEITA SOBRE O MESMO SÍMBOLO DE COMPRA OU VENDA
-    #DEVE SER MOSTRADO APENAS EM UMA LINHA
-    #SOLUÇÃO 0: USAR UM COMANDO SQL QUE ME DE A LINHA O NÚMERO DE AÇÕES DE UM DETERMINANDO SIMBOLO 
-    #SOLUÇÃO 1 : FAZER TODA A LÓGICA NO PYTHHON
+    rows = db.execute("select symbol, name, sum(shares) as shares, price, sum(shares*price) as total from stockUsers where id_user = ? and shares > ? and stockUsers.type = ?  GROUP by symbol, name", idUser, 0, "BUY")
 
     cashRow = db.execute("SELECT cash FROM users WHERE id = ?", idUser)
     if not cashRow:
