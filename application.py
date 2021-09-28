@@ -49,9 +49,6 @@ def index():
 
     idUser = session["user_id"]
 
-    #zero in the third parameter means to show only if exist shares to show
-    #rows = db.execute("SELECT symbol, name, shares, price, total FROM stockUsers WHERE #stockUsers.id_user = ? and stockUsers.type = ? and stockUsers.shares > ? ", idUser, #"BUY", 0)
-
     rows = db.execute("select symbol, name, sum(shares) as shares, price, sum(shares*price) as total from stockUsers where id_user = ? and shares > ? and stockUsers.type = ?  GROUP by symbol, name", idUser, 0, "BUY")
 
     cashRow = db.execute("SELECT cash FROM users WHERE id = ?", idUser)
@@ -236,37 +233,82 @@ def sell():
         
 
         #selecting all symbol name from stocks that had been buy
-        rows =  db.execute("SELECT DISTINCT stockUsers.symbol FROM stockUsers WHERE stockUsers.id_user = ? ",idUser )
+        rows =  db.execute("SELECT DISTINCT stockUsers.symbol FROM stockUsers WHERE stockUsers.id_user = ?  and type = ? and shares > ?", idUser, "BUY", 0 )
 
         return render_template("sell.html", stocks = rows)
     else:
         
         symbol = request.form.get("symbol")
-        shares = request.form.get("shares")
+        sharesToSell = request.form.get("shares")
 
-        #if shares <= 0:
-        #    return apology("Shares must be positive", 400)
+        if int(sharesToSell) <= 0:
+            return apology("Shares must be positive", 400)
 
         # Need to return the number of shares of a stock symbol
         data = db.execute("SELECT  SUM (stockUsers.shares) AS totalShares FROM stockUsers WHERE stockUsers.id_user = ? and symbol = ? AND type = ?",idUser, symbol, "BUY" )
 
         #total shares of a given symbol
-        totalShares = 0
-        for value in data:
-            totalShares = value["totalShares"]
+        totalShares = data[0]["totalShares"]
 
-        return apology("asdf",totalShares)
+        if int(sharesToSell) > int(totalShares):
+            return apology("can't sell so many shares", 400)
 
-        if shares > totalShares:
-            return apology("TOO many shares")
-        
         responseAPI = lookup(symbol)
         price = responseAPI["price"]
-        #USAR UM SELECT QUE RETORNE TODAS COMPRAS DO SYMBOLO
-        # FAZER UM FOR DIMINUINDO O NÚMERO DE SHARES PARA VENDER
-        #AS LINHAS QUE FOREM ZERADAS NÃO SERÃO EXIBIDAS NO INDEX
+        name = responseAPI["name"]
 
+        rows = db.execute("select stockUsers.id_stockes, symbol, name, shares from stockUsers where stockUsers.id_user = ? and symbol = ?", idUser, symbol)
 
+        #casting to integer the values
+        sharesInTable = 0
+        sharesToSell = int(sharesToSell)
+        totalSharesSold = sharesToSell
+
+        saleMoney = 0
+        totalSaleMoney = 0
+        #every sale of a share will decrease the purchase transaction
+        # also we calculate the value of sale updating the cash of the user
+
+        for data in rows:
+            sharesInTable = int(data["shares"])
+
+            if sharesInTable <= sharesToSell:
+
+                saleMoney = price * sharesInTable   
+                totalSaleMoney += saleMoney     
+                sharesToSell = sharesToSell - sharesInTable
+                sharesInTable = 0
+                data["shares"] = sharesInTable
+
+                #update the table stockUsers setting the shares to 0 when selling it
+                db.execute("UPDATE stockUsers SET shares = ? WHERE stockUsers.id_stockes = ?",data["shares"], data["id_stockes"]  )
+
+                #updating the user cash
+                db.execute("UPDATE users SET cash = cash + ? WHERE users.id = ?", saleMoney, idUser)
+                #return apology("not run cash", 123)
+
+                #if sold every share 
+                if sharesToSell == 0:
+                    break
+            # one transaction of buy has all shares needed to sell     
+            elif sharesInTable >= sharesToSell:
+                sharesInTable = sharesInTable - sharesToSell
+                data["shares"] = sharesInTable
+
+                db.execute("UPDATE stockUsers SET shares = ? WHERE stockUsers.id_stockes = ?",data["shares"], data["id_stockes"]  )
+
+                saleMoney = price * sharesToSell
+                totalSaleMoney += saleMoney 
+
+                 #updating the user cash
+                db.execute("UPDATE users SET cash = cash + ? WHERE users.id = ?", saleMoney, idUser)
+                break;
+
+        date = datetime.datetime.now()
+
+        db.execute("INSERT INTO stockUsers(symbol, name, shares, price, total, type, data, id_user) VALUES(?, ?, ?, ?, ?, ? , ?, ? )", symbol, name, -totalSharesSold, price, totalSaleMoney, "SELL", date, idUser )    
+
+        return redirect("/")
 
 
 def errorhandler(e):
