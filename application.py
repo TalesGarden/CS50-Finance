@@ -49,8 +49,11 @@ def index():
 
     idUser = session["user_id"]
 
-    rows = db.execute("SELECT symbol, name, shares, price, total FROM stockUsers WHERE stockUsers.id_user = ? and stockUsers.type = ?", idUser, "BUY")
-    
+    #zero in the third parameter means to show only if exist shares to show
+    #rows = db.execute("SELECT symbol, name, shares, price, total FROM stockUsers WHERE #stockUsers.id_user = ? and stockUsers.type = ? and stockUsers.shares > ? ", idUser, #"BUY", 0)
+
+    rows = db.execute("select symbol, name, sum(shares) as shares, price, sum(shares*price) as total from stockUsers where id_user = ? and shares > ? and stockUsers.type = ?  GROUP by symbol, name", idUser, 0, "BUY")
+
     cashRow = db.execute("SELECT cash FROM users WHERE id = ?", idUser)
     if not cashRow:
         return apology("Error Database User")
@@ -63,7 +66,6 @@ def index():
     cashFooter += cash
     
     return render_template("index.html", register = rows, cash = cash, cashFooter = cashFooter)
-
 
 @app.route("/buy", methods=["GET", "POST"])
 @login_required
@@ -242,7 +244,7 @@ def sell():
         symbol = request.form.get("symbol")
         shares = request.form.get("shares")
 
-        #if int(shares) <= 0:
+        #if shares <= 0:
         #    return apology("Shares must be positive", 400)
 
         # Need to return the number of shares of a stock symbol
@@ -263,7 +265,6 @@ def sell():
         #USAR UM SELECT QUE RETORNE TODAS COMPRAS DO SYMBOLO
         # FAZER UM FOR DIMINUINDO O NÚMERO DE SHARES PARA VENDER
         #AS LINHAS QUE FOREM ZERADAS NÃO SERÃO EXIBIDAS NO INDEX
-        # FICA APEAS O PROBLEMA DE MOSTRAR TODO O HISTÓRICO QUE PODE SER RESOLVIDO ADICIONANDO UM ATRIBUTO NA TABELA DE NOME INICIAL SHARES BUY
 
 
 
