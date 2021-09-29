@@ -64,6 +64,7 @@ def index():
     
     return render_template("index.html", register = rows, cash = cash, cashFooter = cashFooter)
 
+
 @app.route("/buy", methods=["GET", "POST"])
 @login_required
 def buy():
@@ -78,8 +79,14 @@ def buy():
         shares = request.form.get("shares")
         responseAPI = lookup(symbol)
 
+        if not symbol or not shares:
+            return apology("symbol and shares are required", 400)
+        
+        if not shares.isnumeric() or int(shares) < 0:
+            return apology("shares should be a positive number", 400)
+
         if not responseAPI:
-            return apology("Symbol does not exist")
+            return apology("Symbol does not exist", 400)
 
         price = responseAPI["price"]
         name = responseAPI["name"]
@@ -110,6 +117,7 @@ def buy():
             return apology("DATABASE ERROR",400)
            
         return redirect("/")
+
 
 @app.route("/history")
 @login_required
@@ -223,7 +231,9 @@ def register():
     else:
         return render_template("register.html")
 
+
 @app.route("/sell", methods=["GET", "POST"])
+
 
 @login_required
 def sell():
@@ -231,21 +241,24 @@ def sell():
     idUser = session["user_id"]
     if request.method == "GET":
         
-
         #selecting all symbol name from stocks that had been buy
         rows =  db.execute("SELECT DISTINCT stockUsers.symbol FROM stockUsers WHERE stockUsers.id_user = ?  and type = ? and shares > ?", idUser, "BUY", 0 )
 
         return render_template("sell.html", stocks = rows)
+
     else:
-        
         symbol = request.form.get("symbol")
         sharesToSell = request.form.get("shares")
+        
+        if not symbol or not sharesToSell:
+            return apology("symbol and number of shares are required",400)
+        
+        if not sharesToSell.isnumeric() or int(sharesToSell) < 0:
+            return apology("shares should be a positive number", 400)
 
-        if int(sharesToSell) <= 0:
-            return apology("Shares must be positive", 400)
 
         # Need to return the number of shares of a stock symbol
-        data = db.execute("SELECT  SUM (stockUsers.shares) AS totalShares FROM stockUsers WHERE stockUsers.id_user = ? and symbol = ? AND type = ?",idUser, symbol, "BUY" )
+        data = db.execute("SELECT  SUM (stockUsers.shares) AS totalShares FROM stockUsers WHERE stockUsers.id_user = ? and symbol = ? AND type = ? and shares > ?",idUser, symbol, "BUY",0 )
 
         #total shares of a given symbol
         totalShares = data[0]["totalShares"]
@@ -257,7 +270,7 @@ def sell():
         price = responseAPI["price"]
         name = responseAPI["name"]
 
-        rows = db.execute("select stockUsers.id_stockes, symbol, name, shares from stockUsers where stockUsers.id_user = ? and symbol = ?", idUser, symbol)
+        rows = db.execute("select stockUsers.id_stockes, symbol, name, shares from stockUsers where stockUsers.id_user = ? and symbol = ? AND shares > ?", idUser, symbol, 0)
 
         #casting to integer the values
         sharesInTable = 0
@@ -265,14 +278,15 @@ def sell():
         totalSharesSold = sharesToSell
 
         saleMoney = 0
-        totalSaleMoney = 0
+        
         #every sale of a share will decrease the purchase transaction
         # also we calculate the value of sale updating the cash of the user
 
         for data in rows:
+            totalSaleMoney = 0
             sharesInTable = int(data["shares"])
 
-            if sharesInTable <= sharesToSell:
+            if sharesInTable < sharesToSell:
 
                 saleMoney = price * sharesInTable   
                 totalSaleMoney += saleMoney     
@@ -281,7 +295,7 @@ def sell():
                 data["shares"] = sharesInTable
 
                 #update the table stockUsers setting the shares to 0 when selling it
-                db.execute("UPDATE stockUsers SET shares = ? WHERE stockUsers.id_stockes = ?",data["shares"], data["id_stockes"]  )
+                db.execute("UPDATE stockUsers SET shares = ? WHERE stockUsers.id_stockes = ?",data["shares"], data["id_stockes"] )
 
                 #updating the user cash
                 db.execute("UPDATE users SET cash = cash + ? WHERE users.id = ?", saleMoney, idUser)
@@ -306,7 +320,7 @@ def sell():
 
         date = datetime.datetime.now()
 
-        db.execute("INSERT INTO stockUsers(symbol, name, shares, price, total, type, data, id_user) VALUES(?, ?, ?, ?, ?, ? , ?, ? )", symbol, name, -totalSharesSold, price, totalSaleMoney, "SELL", date, idUser )    
+        db.execute("INSERT INTO stockUsers(symbol, name, shares, history_shares, price, total, type, data, id_user) VALUES(?, ?, ?, ?, ?, ?, ? , ?, ? )", symbol, name, -totalSharesSold,-totalSharesSold,  price, totalSaleMoney, "SELL", date, idUser )    
 
         return redirect("/")
 
