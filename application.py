@@ -6,7 +6,7 @@ from flask_session import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
-import datetime
+from datetime import datetime
 from helpers import apology, login_required, lookup, usd
 
 # Configure application
@@ -105,8 +105,8 @@ def buy():
             return apology("you don't have enough money")
 
         #saving the transaction in database
-        data = datetime.datetime.now()
-        rows = db.execute("INSERT INTO stockUsers(symbol, name, shares,history_shares, price, total, type, data, id_user) VALUES(?, ?, ?, ?, ?, ?, ? , ?, ? )",symbol, name, shares, shares, price, total, "BUY", data, idUser )
+        date = str(datetime.now())
+        rows = db.execute("INSERT INTO stockUsers(symbol, name, shares,history_shares, price, total, type, data, id_user) VALUES(?, ?, ?, ?, ?, ?, ? , ?, ? )",symbol, name, shares, shares, price, total, "BUY", date, idUser )
 
         #updating cash of user
         remainingMoney = cash - total
@@ -123,7 +123,7 @@ def buy():
 @login_required
 def history():
     """Show history of transactions"""
-    dataStocks = db.execute("SELECT symbol, history_shares AS shares, price, data FROM stockUsers WHERE id_user = ?",session["user_id"] )
+    dataStocks = db.execute("SELECT symbol, history_shares AS shares, price, data FROM stockUsers WHERE id_user = ? ORDER BY data DESC",session["user_id"] )
 
     return render_template("hystory.html", stocks=dataStocks)
 
@@ -321,7 +321,7 @@ def sell():
                 db.execute("UPDATE users SET cash = cash + ? WHERE users.id = ?", saleMoney, idUser)
                 break;
 
-        date = datetime.datetime.now()
+        date = str(datetime.now())
 
         db.execute("INSERT INTO stockUsers(symbol, name, shares, history_shares, price, total, type, data, id_user) VALUES(?, ?, ?, ?, ?, ?, ? , ?, ? )", symbol, name, -totalSharesSold,-totalSharesSold,  price, totalSaleMoney, "SELL", date, idUser )    
 
