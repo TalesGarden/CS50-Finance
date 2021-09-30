@@ -17,7 +17,7 @@ The exercise proposes the following implemntation:
 
 For each feature, the flask has a route. the route behaves like the controller in an MVC model
 ## DATABASE
-the schema of the database and all construction of tables for this problem can be found in [finance](/database)
+the schema of the database and all construction of tables for this problem can be found in [Database](/database)
 
 
 ## Data used
