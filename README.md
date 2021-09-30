@@ -1,4 +1,8 @@
+# CS50x-2021
+This is CS50, Harvard University's introduction to the intellectual enterprises of computer science and the art of programming.
 # CS50's Finance
+
+## [Academic Honesty](https://cs50.harvard.edu/x/2021/honesty/)
 
 All Instruction to construct this project can be found in [Finance](https://cs50.harvard.edu/x/2021/psets/9/finance/)
 
